@@ -1,7 +1,7 @@
 ## Comparison of Storm Event Types on Population Health and National Economy
 
 ### 1. Synopsis
-In this report, we explore the NOAA Storm Database and answer (1) Across the United States, which types of events are most harmful with respect to population health?, and (2) Across the United States, which types of events have the greatest economic consequences?. The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete. From the data, we find that ...
+In this report, we explore the NOAA Storm Database and answer (1) Across the United States, which types of events are most harmful with respect to population health?, and (2) Across the United States, which types of events have the greatest economic consequences?. The events in the database start in the year 1950 and end in November 2011. From the data, we find that `TORNADOES, TSTM WIND, HAIL` and `COASTAL EROSION` are most damaging to population health and the US Economy respectively.
 
 ****
 
@@ -84,8 +84,6 @@ title="Top 10 Fatalities by Storm Event Type"
 q <- qplot(EVTYPE, FATALITIES, data=top10PopData, fill=EVTYPE, geom="bar", stat="identity", main=title)
 q + theme(axis.text.x=element_text(angle=-45, hjust=-0.05))
 ```
-
-****
 
 Assuming that `FATALITIES` is a key measure of population health, we find that `TORNADOES, TSTM WIND, HAIL` has the highest average fatalities and therefore, is the most harmful to population health.
 
