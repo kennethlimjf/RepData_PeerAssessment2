@@ -1,0 +1,110 @@
+## Comparison of Storm Event Types on Population Health and National Economy
+
+### 1. Synopsis
+In this report, we explore the NOAA Storm Database and answer (1) Across the United States, which types of events are most harmful with respect to population health?, and (2) Across the United States, which types of events have the greatest economic consequences?. The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete. From the data, we find that ...
+
+****
+
+### 2. Data Processing
+#### 2.1 Raw data
+The dataset that we use for our analysis comes from the National Weather Service in the United States. The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
+
+Raw data is available online for download at: [Storm Data - National Weather Service](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2). Documentation of the database available at [National Weather Service Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf).
+
+
+#### 2.2 Reading data
+We first extract the data from `.bz2` to obtain the `.csv` file. With the csv file extracted, we read the data into our R environment.
+
+```{r cache=TRUE}
+rawData <- read.csv("repdata-data-StormData.csv")
+```
+
+#### 2.3 Processing
+For the purpose of this analysis, we are interested in the storm event types, measures of population health and measures of economic factors. We use the `dplyr` library to help prepare this data set.
+
+```{r message=FALSE}
+library(dplyr)
+```
+
+```{r}
+selectData <- rawData %>% select(EVTYPE, FATALITIES, PROPDMG)
+processedData <- selectData %>% filter(complete.cases(selectData))
+```
+
+Running the data processing code, we store the processed data in the variable `processedData`. We will be using this data set for the rest of our analysis.
+
+****
+
+### 3. Results
+#### 3.1 Descriptive Statistics of Event data
+
+The measures used for measuring harm of population health are:
+
+* Fatalities
+
+While measures used for measuring harmful consequences on the economy are:
+
+* Property Damage
+
+In order to understand more about the harm inflicted on population health and the economy, we look at some descriptive statistics of the measures used.
+
+```{r}
+summary(processedData$FATALITIES)
+```
+
+```{r}
+summary(processedData$PROPDMG)
+```
+
+We study the pairwise comparisons of these measures. First, we perform an aggregation by mean, then we plot the graph.
+
+```{r}
+aggregateData <- processedData %>% group_by(EVTYPE) %>% summarize(FATALITIES=mean(FATALITIES), PROPDMG=mean(PROPDMG))
+pairwiseData <- aggregateData %>%
+  select(FATALITIES, PROPDMG) %>%
+  mutate(Flog=-log10(FATALITIES)) %>%
+  mutate(Plog=-log10(PROPDMG))
+pairs(pairwiseData, main="Pairwise comparisons of Population Health and Economic Measures")
+```
+
+From the data, there appears to be some correlation between the logarithmic values of `FATALTIES` and `PROPDMG`.
+
+****
+
+#### 3.2 Analysis on events types most harmful to the population
+
+To analyze which storm event type is most harmful to population health, first we filter the data to get the `EVTYPE`, `FATALITIES`. Then, we group the data by `EVTYPE` and calculate the mean for `FATALITIES`. Lastly, we rank the result by the highest average FATALITIES, and take the top 10.
+
+```{r}
+popData <- processedData %>% select(EVTYPE, FATALITIES) %>% group_by(EVTYPE) %>% summarize(FATALITIES=mean(FATALITIES)) %>% arrange(desc(FATALITIES))
+top10PopData <- popData[c(1:10), ]
+
+library(ggplot2)
+title="Top 10 Fatalities by Storm Event Type"
+q <- qplot(EVTYPE, FATALITIES, data=top10PopData, fill=EVTYPE, geom="bar", stat="identity", main=title)
+q + theme(axis.text.x=element_text(angle=-45, hjust=-0.05))
+```
+
+****
+
+Assuming that `FATALITIES` is a key measure of population health, we find that `TORNADOES, TSTM WIND, HAIL` has the highest average fatalities and therefore, is the most harmful to population health.
+
+****
+
+#### 3.3 Analysis on event types with greatest economic consequences
+
+To analyze which storm event type is most harmful to the US economy, first we filter the data to get the `EVTYPE`, `PROPDMG`. Then, we group the data by `EVTYPE` and calculate the mean for `PROPDMG`. Lastly, we rank the result by the highest average PROPDMG, and take the top 10.
+
+```{r fig.height=6}
+econData <- processedData %>% select(EVTYPE, PROPDMG) %>% group_by(EVTYPE) %>% summarize(PROPDMG=mean(PROPDMG)) %>% arrange(desc(PROPDMG))
+top10EconData <- econData[c(1:10), ]
+
+library(ggplot2)
+title="Top 10 Property Damage by Storm Event Type"
+q <- qplot(EVTYPE, PROPDMG, data=top10EconData, fill=EVTYPE, geom="bar", stat="identity", main=title)
+q + theme(axis.text.x=element_text(angle=-45, hjust=-0.05))
+```
+
+Assuming that `PROPDMG` is a key measure of negative economic consequences, we find that `COASTAL EROSION` storm events causes the highest property damage and therefore, is the most damaging to the US economy.
+
+****
